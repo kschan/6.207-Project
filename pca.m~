@@ -1,0 +1,53 @@
+%% Generate list of features
+egos = sort([0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]);
+feature_index_dict = containers.Map;
+index_feature_dict = containers.Map('KeyType', 'double', 'ValueType', 'any');
+ego_feature_dict = containers.Map('KeyType', 'double', 'ValueType', 'any');
+index = 1;
+
+for ego=egos
+   features = [];
+   f = fopen(strcat('facebook/', string(ego), '.featnames'));
+   line = fgetl(f);
+   while ischar(line)
+       feat = strsplit(line);
+       % feat takes form [line_number, feat_name, 'feature', feature_number]
+       feat = char(strcat(string(feat(2)), {' '}, string(feat(3)), {' '}, string(feat(4))));
+       if ~isKey(feature_index_dict, feat)
+           feature_index_dict(feat) = index;
+           index_feature_dict(index) = feat;
+           index = index + 1;
+       end
+       features = [features, feature_index_dict(feat)];
+       line = fgetl(f);
+   end
+   ego_feature_dict(ego) = features;
+   fclose(f);
+end
+
+%% Generate Feature Matrix
+numNodes = 4039;
+numFeatures = length(feature_index_dict);
+featureMatrix = zeros(numNodes, numFeatures);
+
+for ego = egos
+    feature_indices = ego_feature_dict(ego);
+    
+    % gotta get the ego's features
+    ego_feat = fopen(strcat('facebook/', string(ego), '.egofeat'));
+    features = strread(fgetl(ego_feat));
+    fclose(ego_feat);
+    featureMatrix(ego + 1, feature_indices) = features;
+    
+    feat = fopen(strcat('facebook/', string(ego), '.feat'));
+    line = fgetl(feat);
+    while ischar(line)
+        features = strread(line);
+        neighbor_index = features(1) + 1;
+        neighbor_features = features(2:end);
+        featureMatrix(neighbor_index, feature_indices) = neighbor_features;
+        line = fgetl(feat);
+    end
+    fclose(feat);
+end
+
