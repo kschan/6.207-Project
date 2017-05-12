@@ -85,6 +85,7 @@ hold on;
 
 plot(transformedFeatures(group1, 1), transformedFeatures(group1, 2), '.', 'Color', 'blue')
 plot(transformedFeatures(group2, 1), transformedFeatures(group2, 2), '.', 'Color', 'red');
+title('Transformed feature matrix');
 
 hold off;
 
